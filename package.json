@@ -11,16 +11,22 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "compression": "^1.8.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
+    "lodash": "^4.17.21",
+    "mongoose": "^8.14.0",
     "morgan": "^1.10.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/compression": "^1.7.5",
     "@types/express": "^5.0.1",
     "@types/helmet": "^0.0.48",
+    "@types/lodash": "^4.17.16",
+    "@types/mongoose": "^5.11.96",
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.14.1",
     "eslint": "^9.25.0",

@@ -25,7 +25,7 @@ const dev: Config = {
     db: {
         host: process.env.DEV_DB_HOST || 'localhost',
         port: parseInt(process.env.DEV_DB_PORT || '27017', 10),
-        name: process.env.DEV_DB_NAME || 'shopDEV',
+        name: process.env.DEV_DB_NAME || 'ecommerce',
     },
 };
 

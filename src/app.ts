@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // init db
-// import './dbs/init.mongodb';
+import './db/init.mongodb';
 // import './dbs/init.redis'; // nếu dùng redis thì bật lên
 
 // test pub/sub redis
