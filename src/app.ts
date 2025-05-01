@@ -18,6 +18,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // init db
 import './db/init.mongodb';
+import { SuccessResponse } from './core/success.response';
+import { ForbiddenError } from './core/error.response';
+import routes from './routes';
 // import './dbs/init.redis'; // nếu dùng redis thì bật lên
 
 // test pub/sub redis
@@ -34,33 +37,36 @@ import './db/init.mongodb';
 // app.use('/', routes);
 
 // handling error - Not Found
-app.use((req: Request, res: Response, next: NextFunction) => {
-    const error: any = new Error('Not Found');
-    error.status = 404;
-    next(error);
-});
+// app.use((req: Request, res: Response, next: NextFunction) => {
+//     const error: any = new Error('Not Found');
+//     error.status = 404;
+//     next(error);
+// });
+
+app.use('/api', routes);
 
 interface CustomError extends Error {
     status?: number;
     statusCode?: number;
 }
 
+const metadata = () => {
+    console.log("thorw");
+    throw new ForbiddenError("Something wrong happened !! Pls relogin", 510);
+    // return {};
+}
+
+app.get('/', (req: Request, res: Response) => {
+    console.log("log")
+    new SuccessResponse({
+        // statusCode: 200,
+        message: "Get token success!",
+        metadata: metadata()
+    }).send(res);
+});
+
 // handling error - Other Errors
-const errorHandler: ErrorRequestHandler = (error, req: Request, res: Response, next: NextFunction): void => {
-    const statusCode = error.status || 500;
-    res.status(statusCode).json({
-        status: 'error',
-        code: statusCode,
-        stack: error.stack,
-        message: error.message || 'Internal Server Error',
-    });
-
-    // Không cần phải trả về gì, chỉ cần gửi response
-};
-
-app.use(errorHandler);
-
-// app.use((error: any, req: Request, res: Response, next: NextFunction): void => {
+// const errorHandler: ErrorRequestHandler = (error, req: Request, res: Response, next: NextFunction): void => {
 //     const statusCode = error.status || 500;
 //     res.status(statusCode).json({
 //         status: 'error',
@@ -68,5 +74,21 @@ app.use(errorHandler);
 //         stack: error.stack,
 //         message: error.message || 'Internal Server Error',
 //     });
-// });
+
+//     // Không cần phải trả về gì, chỉ cần gửi response
+// };
+
+// app.use(errorHandler);
+
+app.use((error: any, req: Request, res: Response, next: NextFunction): void => {
+    const statusCode = error.status || 500;
+    res.status(statusCode).json({
+        status: 'error',
+        code: statusCode,
+        stack: error.stack,
+        message: error.message || 'Internal Server Error',
+    });
+});
+
+
 export default app;

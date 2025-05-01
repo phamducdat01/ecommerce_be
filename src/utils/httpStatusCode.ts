@@ -1,4 +1,7 @@
+import StatusCodes from './statusCodes';
+import ReasonPhrases from './reasonPhrases';
+
 export default {
-    StatusCodes: require("./statusCodes"),
-    ReasonPhrases: require("./reasonPhrases"),
+    StatusCodes,
+    ReasonPhrases
 };
