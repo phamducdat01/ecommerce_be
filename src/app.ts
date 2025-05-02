@@ -21,6 +21,7 @@ import './db/init.mongodb';
 import { SuccessResponse } from './core/success.response';
 import { ForbiddenError } from './core/error.response';
 import routes from './routes';
+import { sendMail } from './helpers/mail.helper';
 // import './dbs/init.redis'; // nếu dùng redis thì bật lên
 
 // test pub/sub redis
@@ -32,55 +33,21 @@ import routes from './routes';
 // import { checkOverload } from './helpers/check.connect';
 // checkOverload();
 
-// init routes
-// import routes from './routes';
-// app.use('/', routes);
-
-// handling error - Not Found
-// app.use((req: Request, res: Response, next: NextFunction) => {
-//     const error: any = new Error('Not Found');
-//     error.status = 404;
-//     next(error);
-// });
-
 app.use('/api', routes);
 
-interface CustomError extends Error {
-    status?: number;
-    statusCode?: number;
-}
 
-const metadata = () => {
-    console.log("thorw");
-    throw new ForbiddenError("Something wrong happened !! Pls relogin", 510);
-    // return {};
-}
+// const resetLink = `http://${process.env.FRONTEND_URL}`;
 
-app.get('/', (req: Request, res: Response) => {
-    console.log("log")
-    new SuccessResponse({
-        // statusCode: 200,
-        message: "Get token success!",
-        metadata: metadata()
-    }).send(res);
-});
-
-// handling error - Other Errors
-// const errorHandler: ErrorRequestHandler = (error, req: Request, res: Response, next: NextFunction): void => {
-//     const statusCode = error.status || 500;
-//     res.status(statusCode).json({
-//         status: 'error',
-//         code: statusCode,
-//         stack: error.stack,
-//         message: error.message || 'Internal Server Error',
-//     });
-
-//     // Không cần phải trả về gì, chỉ cần gửi response
+// const mailOptions = {
+//     to: `phamducdat171102dta@gmail.com`,
+//     subject: "Reset your password",
+//     html: `Click this link to reset your password: <a href="${resetLink}">${resetLink}</a>`,
 // };
 
-// app.use(errorHandler);
+// sendMail(mailOptions);
 
-app.use((error: any, req: Request, res: Response, next: NextFunction): void => {
+// handling error - Other Errors
+const errorHandler: ErrorRequestHandler = (error, req: Request, res: Response, next: NextFunction): void => {
     const statusCode = error.status || 500;
     res.status(statusCode).json({
         status: 'error',
@@ -88,7 +55,21 @@ app.use((error: any, req: Request, res: Response, next: NextFunction): void => {
         stack: error.stack,
         message: error.message || 'Internal Server Error',
     });
-});
+
+    // Không cần phải trả về gì, chỉ cần gửi response
+};
+
+app.use(errorHandler);
+
+// app.use((error: any, req: Request, res: Response, next: NextFunction): void => {
+//     const statusCode = error.status || 500;
+//     res.status(statusCode).json({
+//         status: 'error',
+//         code: statusCode,
+//         stack: error.stack,
+//         message: error.message || 'Internal Server Error',
+//     });
+// });
 
 
 export default app;

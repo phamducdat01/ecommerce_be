@@ -9,6 +9,10 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*",
+    "types/**/*",
+    "env.d.ts"
+  ],
   "exclude": ["node_modules"]
 }

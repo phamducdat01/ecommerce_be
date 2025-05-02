@@ -1,11 +1,20 @@
 import express from 'express';
 import productRouter from './product.router';
-// import categoryRouter from './category.router';
+import cartItemRouter from './cartItem.router';
+import categoryRouter from './category.router';
+import orderRouter from './order.router';
+import userRouter from './user.router';
+import reviewRouter from './review.router';
+import accessRouter from './access.router';
 
 const router = express.Router();
 
-// Gắn từng router vào prefix tương ứng
 router.use('/products', productRouter);
-// router.use('/categories', categoryRouter);
+router.use('/cart-items', cartItemRouter);
+router.use('/categories', categoryRouter);
+router.use('/orders', orderRouter);
+router.use('/users', userRouter);
+router.use('/reviews', reviewRouter);
+router.use('/auth', accessRouter);
 
 export default router;
