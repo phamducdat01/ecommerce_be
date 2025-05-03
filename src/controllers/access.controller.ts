@@ -29,3 +29,17 @@ export const logout = async (req: Request, res: Response) => {
         metadata: await AccessService.logout(req.body.userId)
     }).send(res);
 };
+
+export const forgotPassword = async (req: Request, res: Response) => {
+    new OK({
+        message: "Yêu cầu đặt lại mật khẩu thành công!",
+        metadata: await AccessService.forgotPassword(req.body.email)
+    }).send(res);
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+    new OK({
+        message: "Đặt lại mật khẩu thành công!",
+        metadata: await AccessService.resetPassword(req.body.resetToken, req.body.newPassword)
+    }).send(res);
+};

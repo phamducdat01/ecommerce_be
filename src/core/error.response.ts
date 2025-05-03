@@ -60,7 +60,7 @@ class ForbiddenError extends ErrorResponse {
 
 Lỗi 400 Bad Request: Dùng khi yêu cầu gửi đến không hợp lệ.
 
-Lỗi 401 Unauthorized: Dùng khi người dùng chưa xác thực.
+Lỗi 401 AuthFailureError: Dùng khi người dùng chưa xác thực.
 
 Lỗi 404 Not Found: Dùng khi không tìm thấy tài nguyên.
 

@@ -8,6 +8,9 @@ export interface IUser extends Document {
     phone?: string;
     address?: string;
     role: 'customer' | 'admin';
+    resetPasswordToken?: string;
+    resetPasswordExpires?: Date;
+    refreshToken?: string;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -19,7 +22,10 @@ const UserSchema = new Schema<IUser>(
         passwordHash: { type: String, required: true },
         phone: { type: String },
         address: { type: String },
-        role: { type: String, enum: ['customer', 'admin'], default: 'customer' }
+        role: { type: String, enum: ['customer', 'admin'], default: 'customer' },
+        resetPasswordToken: { type: String },
+        resetPasswordExpires: { type: Date },
+        refreshToken: { type: String },
     },
     { timestamps: true }
 );

@@ -1,10 +1,9 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { BadRequestError, ConflictRequestError, NotFoundError } from '../core/error.response';
+import crypto from 'crypto';
+import { AuthFailureError, BadRequestError, ConflictRequestError, NotFoundError } from '../core/error.response';
 import { IUser, UserModel } from '../models/user.model';
-
-// Lưu trữ refresh token trong bộ nhớ (sử dụng Redis hoặc MongoDB trong production)
-const refreshTokens: Map<string, string> = new Map();
+import { sendMail } from '../helpers/mail.helper';
 
 export const AccessService = {
     // Đăng ký người dùng mới
@@ -38,8 +37,10 @@ export const AccessService = {
             { expiresIn: '7d' }
         );
 
-        // Lưu refresh token
-        refreshTokens.set(newUser._id.toString(), refreshToken);
+        // Lưu refresh token vào MongoDB
+        newUser.refreshToken = refreshToken;
+        await newUser.save();
+
 
         return {
             user: {
@@ -80,8 +81,9 @@ export const AccessService = {
             { expiresIn: '7d' }
         );
 
-        // Lưu refresh token
-        refreshTokens.set(user._id.toString(), refreshToken);
+        // Lưu refresh token vào MongoDB
+        user.refreshToken = refreshToken;
+        await user.save();
 
         return {
             user: {
@@ -106,13 +108,9 @@ export const AccessService = {
             const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET) as { userId: string };
             const userId = decoded.userId;
 
-            // Kiểm tra refresh token
-            if (!refreshTokens.has(userId) || refreshTokens.get(userId) !== refreshToken) {
-                throw new BadRequestError("Refresh token không hợp lệ");
-            }
-
-            const user = await UserModel.findById(userId);
-            if (!user) throw new NotFoundError("Không tìm thấy người dùng");
+            // Kiểm tra refresh token trong MongoDB
+            const user = await UserModel.findOne({ _id: userId, refreshToken });
+            if (!user) throw new AuthFailureError("Refresh token không hợp lệ hoặc đã hết hạn");;
 
             // Tạo access token mới
             const accessToken = jwt.sign(
@@ -123,17 +121,74 @@ export const AccessService = {
 
             return { accessToken };
         } catch (error) {
-            throw new BadRequestError("Refresh token không hợp lệ");
+            throw new AuthFailureError("Refresh token không hợp lệ hoặc đã hết hạn");
         }
     },
 
     // Đăng xuất
     logout: async (userId: string) => {
-        // Xóa refresh token
-        if (refreshTokens.has(userId)) {
-            refreshTokens.delete(userId);
+        // Xóa refresh token trong MongoDB
+        const user = await UserModel.findById(userId);
+        if (user && user.refreshToken) {
+            user.refreshToken = undefined;
+            await user.save();
             return { message: "Đăng xuất thành công" };
         }
         throw new BadRequestError("Không tìm thấy phiên đăng nhập");
+    },
+
+    // Quên mật khẩu
+    forgotPassword: async (email: string) => {
+        const user = await UserModel.findOne({ email });
+        if (!user) throw new NotFoundError("Không tìm thấy người dùng với email này");
+
+        // Tạo mã thông báo đặt lại mật khẩu
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        const resetPasswordExpires = new Date(Date.now() + 3600000); // Hết hạn sau 1 giờ
+
+        // Lưu mã thông báo và thời gian hết hạn vào người dùng
+        user.resetPasswordToken = resetPasswordToken;
+        user.resetPasswordExpires = resetPasswordExpires;
+        await user.save();
+
+        // TODO: Gửi email chứa liên kết đặt lại mật khẩu
+        // Ví dụ: http://yourdomain.com/reset-password?token=${resetToken}
+        // Sử dụng Nodemailer hoặc dịch vụ gửi email khác ở đây
+        const resetLink = `http://${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+        const mailOptions = {
+            to: `phamducdat171102dta@gmail.com`,
+            subject: "Reset your password",
+            html: `Click this link to reset your password: <a href="${resetLink}">${resetLink}</a>`,
+        };
+
+        sendMail(mailOptions);
+
+        return { message: "Liên kết đặt lại mật khẩu đã được gửi đến email của bạn", resetLink };
+    },
+
+    // Đặt lại mật khẩu
+    resetPassword: async (resetToken: string, newPassword: string) => {
+        // Băm mã thông báo để so sánh
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+        const user = await UserModel.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpires: { $gt: new Date() }
+        });
+        if (!user) throw new BadRequestError("Mã thông báo không hợp lệ hoặc đã hết hạn");
+
+        // Mã hóa mật khẩu mới
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(newPassword, salt);
+
+        // Cập nhật mật khẩu và xóa mã thông báo
+        user.passwordHash = passwordHash;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+
+        return { message: "Mật khẩu đã được đặt lại thành công" };
     }
 };
