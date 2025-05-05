@@ -4,10 +4,24 @@ import crypto from 'crypto';
 import { AuthFailureError, BadRequestError, ConflictRequestError, NotFoundError } from '../core/error.response';
 import { IUser, UserModel } from '../models/user.model';
 import { sendMail } from '../helpers/mail.helper';
+import { Response } from 'express';
+
+// Hàm hỗ trợ để set cookie
+const setRefreshTokenCookie = (res: Response, refreshToken: string) => {
+    res.cookie('refreshToken', refreshToken, {
+        httpOnly: true, // Ngăn JavaScript truy cập cookie
+        // secure: process.env.NODE_ENV === 'production', // Chỉ gửi qua HTTPS trong production
+        secure: false,
+        sameSite: 'strict', // Ngăn CSRF
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 ngày
+    });
+};
 
 export const AccessService = {
     // Đăng ký người dùng mới
-    signUp: async (userData: Pick<IUser, 'name' | 'email' | 'passwordHash' | 'phone' | 'address' | 'role'>) => {
+    signUp: async (userData: Pick<IUser, 'name' | 'email' | 'passwordHash' | 'phone' | 'address' | 'role'>, res: Response) => {
+
+        console.log('userData', userData);
         const existingUser = await UserModel.findOne({ email: userData.email });
         if (existingUser) throw new ConflictRequestError("Email này đã được sử dụng");
 
@@ -40,6 +54,9 @@ export const AccessService = {
         // Lưu refresh token vào MongoDB
         newUser.refreshToken = refreshToken;
         await newUser.save();
+
+        // Set refreshToken vào cookie
+        setRefreshTokenCookie(res, refreshToken);
 
 
         return {

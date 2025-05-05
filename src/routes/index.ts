@@ -6,10 +6,11 @@ import orderRouter from './order.router';
 import userRouter from './user.router';
 import reviewRouter from './review.router';
 import accessRouter from './access.router';
+import { verifyAccessToken } from '../middlewares/auth.middleware';
 
 const router = express.Router();
 
-router.use('/products', productRouter);
+router.use('/products', verifyAccessToken, productRouter);
 router.use('/cart-items', cartItemRouter);
 router.use('/categories', categoryRouter);
 router.use('/orders', orderRouter);

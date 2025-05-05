@@ -4,10 +4,20 @@ import helmet from 'helmet';
 import compression from 'compression';
 import process from 'process';
 import dotenv from 'dotenv';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 
 const app = express();
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true, // Cho phép gửi cookie
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+app.use(cookieParser());
+
 
 // init middleware
 app.use(morgan('dev'));

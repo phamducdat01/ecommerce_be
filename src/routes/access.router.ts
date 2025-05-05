@@ -4,7 +4,7 @@ import * as AccessController from '../controllers/access.controller';
 const router = express.Router();
 
 // Đăng ký người dùng mới
-router.post('/signup', AccessController.signUp);
+router.post('/sign-up', AccessController.signUp);
 
 // Đăng nhập
 router.post('/login', AccessController.login);

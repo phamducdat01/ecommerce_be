@@ -2,10 +2,11 @@ import { Request, Response } from 'express';
 import { AccessService } from '../services/access.service';
 import { CREATED, OK } from '../core/success.response';
 
+
 export const signUp = async (req: Request, res: Response) => {
     new CREATED({
         message: "Đăng ký thành công!",
-        metadata: await AccessService.signUp(req.body)
+        metadata: await AccessService.signUp(req.body, res)
     }).send(res);
 };
 
@@ -17,9 +18,11 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const handlerRefreshToken = async (req: Request, res: Response) => {
+    const refreshToken = req.cookies.refreshToken;
+    console.log('refreshToken1111', refreshToken)
     new OK({
         message: "Làm mới token thành công!",
-        metadata: await AccessService.handlerRefreshToken(req.body.refreshToken)
+        metadata: await AccessService.handlerRefreshToken(refreshToken)
     }).send(res);
 };
 
