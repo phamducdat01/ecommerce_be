@@ -39,11 +39,15 @@ export const AccessService = {
         if (!process.env.JWT_SECRET) {
             throw new Error("JWT_SECRET không được định nghĩa trong biến môi trường");
         }
+        if (!process.env.JWT_ACCESS_EXPIRES_IN) {
+            throw new Error("JWT_SECRET không được định nghĩa trong biến môi trường");
+        }
+
         // Tạo token
         const accessToken = jwt.sign(
             { userId: newUser._id, role: newUser.role },
             process.env.JWT_SECRET,
-            { expiresIn: '15m' });
+            { expiresIn: '7d' });
 
         const refreshToken = jwt.sign(
             { userId: newUser._id },
@@ -72,7 +76,7 @@ export const AccessService = {
     },
 
     // Đăng nhập
-    login: async (credentials: { email: string; password: string }) => {
+    login: async (credentials: { email: string; password: string }, res: Response) => {
         const user = await UserModel.findOne({ email: credentials.email });
         if (!user) throw new NotFoundError("Không tìm thấy người dùng");
 
@@ -90,7 +94,7 @@ export const AccessService = {
         const accessToken = jwt.sign(
             { userId: user._id, role: user.role },
             process.env.JWT_SECRET,
-            { expiresIn: '15m' }
+            { expiresIn: '7d' }
         );
         const refreshToken = jwt.sign(
             { userId: user._id },
@@ -101,6 +105,9 @@ export const AccessService = {
         // Lưu refresh token vào MongoDB
         user.refreshToken = refreshToken;
         await user.save();
+
+        // Set refreshToken vào cookie
+        setRefreshTokenCookie(res, refreshToken);
 
         return {
             user: {
@@ -133,7 +140,7 @@ export const AccessService = {
             const accessToken = jwt.sign(
                 { userId: user._id, role: user.role },
                 process.env.JWT_SECRET,
-                { expiresIn: '15m' }
+                { expiresIn: '7d' }
             );
 
             return { accessToken };

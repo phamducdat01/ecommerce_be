@@ -10,7 +10,7 @@ import { verifyAccessToken } from '../middlewares/auth.middleware';
 
 const router = express.Router();
 
-router.use('/products', verifyAccessToken, productRouter);
+router.use('/products', productRouter);
 router.use('/cart-items', cartItemRouter);
 router.use('/categories', categoryRouter);
 router.use('/orders', orderRouter);

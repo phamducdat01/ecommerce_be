@@ -13,7 +13,7 @@ export const signUp = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
     new OK({
         message: "Đăng nhập thành công!",
-        metadata: await AccessService.login(req.body)
+        metadata: await AccessService.login(req.body, res)
     }).send(res);
 };
 

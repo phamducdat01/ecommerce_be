@@ -21,11 +21,11 @@ const runSeeder = async () => {
     await connectDB();
 
     try {
-        await fakeUsers();
-        await fakeCategories();
+        // await fakeUsers();
+        // await fakeCategories();
         await fakeProducts();
-        await fakeOrders();
-        await fakeCartItems();
+        // await fakeOrders();
+        // await fakeCartItems();
         console.log('Seeder completed!');
     } catch (error) {
         console.error('Error running seeder', error);

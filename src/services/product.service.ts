@@ -1,5 +1,7 @@
 
+import mongoose from 'mongoose';
 import { BadRequestError, ConflictRequestError, NotFoundError } from '../core/error.response';
+import { CategoryModel } from '../models';
 import { ProductModel } from '../models/product.model';
 import { IProduct } from '../models/product.model';
 
@@ -36,11 +38,48 @@ export const ProductService = {
     },
 
     // Lấy danh sách tất cả sản phẩm
-    getAllProducts: async () => {
-        const products = await ProductModel.find();
-        if (!products || products.length === 0) throw new NotFoundError("No products found");
+    getAllProducts: async (query: { page?: number; category?: string }) => {
+        const { page = 1, category } = query;
+        const skip = (page - 1) * 10;
 
-        return products;
+        const filter: any = {};
+        if (category) {
+            // Tìm danh mục theo slug
+            const categoryDoc = await CategoryModel.findOne({ slug: category });
+            if (!categoryDoc) throw new NotFoundError('Danh mục không tồn tại');
+
+            // Tìm tất cả danh mục con (bao gồm danh mục chính)
+            const categoryIds = [categoryDoc._id];
+            const findSubCategories = async (parentId: mongoose.Types.ObjectId) => {
+                const subCategories = await CategoryModel.find({ parentId }).lean();
+                for (const subCat of subCategories) {
+                    categoryIds.push(subCat._id);
+                    await findSubCategories(subCat._id);
+                }
+            };
+            await findSubCategories(categoryDoc._id);
+
+            // Lọc sản phẩm thuộc danh mục chính hoặc danh mục con
+            filter.categoryId = { $in: categoryIds };
+        }
+
+
+        const [products, total] = await Promise.all([
+            ProductModel.find(filter)
+                // .populate('categoryId', 'name slug')
+                .skip(skip)
+                .limit(10)
+                .lean(),
+            ProductModel.countDocuments(filter)
+        ]);
+
+        return {
+            products: !products ? products : products.map((item) => {
+                const { images, stock, categoryId, ...product } = item;
+                return product
+            }),
+            total
+        }
     },
 
     // Lấy sản phẩm theo ID

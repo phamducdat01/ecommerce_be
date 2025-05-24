@@ -6,6 +6,8 @@ import process from 'process';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJSDoc from 'swagger-jsdoc';
 
 dotenv.config();
 
@@ -25,6 +27,24 @@ app.use(helmet());
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const swaggerOptions: swaggerJSDoc.Options = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'My API',
+            version: '1.0.0',
+        },
+    },
+    apis: ['./src/routes/**/*.ts'],
+};
+
+const swaggerSpec = swaggerJSDoc(swaggerOptions);
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// console.log(JSON.stringify(swaggerSpec, null, 2));
+
 
 // init db
 import './db/init.mongodb';
